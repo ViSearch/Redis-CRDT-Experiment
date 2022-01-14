@@ -1,30 +1,14 @@
-# Conflict-Free Replicated Data Types Based on Redis
+# Redis CRDT Experiment
 
-Several Conflict-Free Replicated Data Types (CRDTs) implemented based on Redis(6.0.5).
+This tutorial introduces how to reproduce our experiments on CRDT-Redis, and generate histories. 
 
-Things we do for such implementation:
+[CRDT-Redis](https://github.com/elem-azar-unis/CRDT-Redis) is an open-source project on Github which revises the Redis data type store into a multi-master architecture and supports CRDT-based conflict resolution for concurrent updates on multiple master nodes.
 
-* Enable Redis to replicate in P2P mode.
-* Implement the CRDT framework.
-* Implement specific CRDTs according to their algorithms.
+## Setup CRDT-Redis
 
-The CRDTs currently implemented:
+As we modified some code of the original CRDT-Redis for our experiments, we provide the complete code of CRDT-Redis in folder *redis-6.0.5* with the consent of the author. 
 
-* Priority Queue
-  * Add-Win PQ
-  * Remove-Win PQ
-  * RWF-PQ
-* Set
-  * Add-Win Set
-  * Remove-Win Set
-  * RWF-Set
-* List
-  * Remove-Win List
-  * RWF-List
-
-## Build
-
-Our modified Redis is in folder *redis-6.0.5*. Please build it in the default mode:
+Please build CRDT-Redis in the default mode in at least 3 machines:
 
 ```bash
 cd redis-6.0.5
@@ -32,50 +16,36 @@ make
 sudo make install
 ```
 
-## CRDT Operations
+## Configure Bench
 
-Different implementations of the same type of CRDT offer the same operations for users. We use **[type][op]** to name our CRDT operations. The operations name contains of an implementation type prefix and an operation type suffix. For example, the name of operation of RWF-PQ to add one element is **rwfzadd**, where **rwf** is the implementation type prefix and **zadd** is the operation type suffix.
+Before experiment, you need to configure the IPs and ports for each machine running CRDT-Redis, in folder *experiment/bench/exp_env.h* . 
 
-### PQ operations
+```cpp
+class exp_env
+{
+	private:
+		string available_hosts[3] = {"172.24.81.1", "172.24.81.2", "172.24.81.3"};
+		string available_ports[5] = {"6379", "6380", "6381", "6382", "6383"};
+```
 
-The **[type]** prefix of different PQs are:
+## **Build & Run Bench**
 
-* Add-Win PQ : **o**
-* Remove-Win PQ : **r**
-* RWF-PQ : **rwf**
+The code of bench is in folder *experiment/bench*.
 
-The operations of RPQs are:
+```
+$ cd experiment/bench
+$ make
+$ ./bench_start [set|rpq] [o|r|rwf] [number] [sudopassword]
+```
 
-* **[type]zadd Q E V** : Add a new element *E* into the priority queue *Q* with initial value *V*.
-* **[type]zincby Q E I** : Add the increment *I* to the value of element *E* in the priority queue *Q*.
-* **[type]zrem Q E** : Remove element *E* from the priority queue *Q*.
-* **[type]zscore Q E** : Read the value of element *E* from the priority queue *Q*.
-* **[type]zmax Q** : Read the element with the largest value in the priority queue *Q*. Returns the element and its value.
+You can choose the data type *set* or *rpq* (redis priority queue). 
 
-### Set operations
+You can also choose the conflict resolution, o referring to add-win, r referring to remove-win ,and rwf referring to RWF-Framework. 
 
-The **[type]** prefix of different Sets are:
+You have to select how many histories to be generated, and give a sudo-password to run redis in remote machines. 
 
-* Add-Win Set : **o**
-* Remove-Win Set : **r**
-* RWF-Set : **rwf**
+For example, 
 
-The operations of Sets are:
-
-* **[type]sadd S E** : Add a new element *E* into the Set *S*.
-* **[type]srem S E** : Remove element *E* from the Set *S*.
-* **[type]scontains S E** : Read the existence of element *E* from the Set *S*.
-* **[type]ssize S** : Returns the number of the element in the Set *S*.
-
-### List operations
-
-The **[type]** prefix of different Lists are:
-
-* Remove-Win List : **r**
-* RWF-List : **rwf**
-
-The operations of Lists are:
-
-* **[type]linsert L prev id content font size color property** : Add a new element *id* after *prev* into the list *L*, with the content *content*, and the initial properties *font* *size* *color* and *property*(bitmap that encodes bold, italic and underline). If *prev* is "null", it means insert the element at the beginning of the list. If *prev* is "readd", it means to re-add the element that is previously added and then removed, and restore its position.
-* **[type]lupdate L id type value** : Update the *type* property with *value* for element *id* in list *L*.
-* **[type]lrem L id** : Remove element *id* from the list *L*.
+```
+$ ./bench_start set r 1000 password123
+```

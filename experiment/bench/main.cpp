@@ -26,21 +26,16 @@ int main(int argc, char *argv[])
             return 0;
         }
     }
-    else if (argc == 4) {
-        exp_env::sudo_pwd = argv[3];
-        round = atoi(argv[2]);
+    else if (argc == 5) {
+        exp_env::sudo_pwd = argv[4];
+        round = atoi(argv[3]);
         if (strcmp(argv[1], "rpq") == 0) {
-            rpq_exp re;
+            rpq_exp re(argv[2]);
             exp_setting::compare = false;
             re.test_default_settings(round);
             return 0;
-        } else if (strcmp(argv[1], "list") == 0) {
-            list_exp le;
-            exp_setting::compare = false;
-            le.test_default_settings(round);
-            return 0;
         } else if (strcmp(argv[1], "set") == 0) {
-            set_exp se;
+            set_exp se(argv[2]);
             exp_setting::compare = false;
             se.test_default_settings(round);
             return 0;

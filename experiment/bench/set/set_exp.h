@@ -23,6 +23,14 @@ public:
         add_type("o");
         add_pattern("default");
     }
+
+    set_exp(const string& type) : rdt_exp(set_setting, "set")
+    {
+        // ! RPQ types: "o", "r", "rwf"
+        add_type(type.c_str());
+        // add_type("o");
+        add_pattern("default");
+    }
 };
 
 #endif  // BENCH_SET_EXP_H
